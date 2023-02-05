@@ -1,0 +1,28 @@
+codegen:
+  golang:
+    package: simple
+    declare_actions: true
+    declare_states: true
+  mermaid:
+    enabled: true
+    filename: machine.md
+actions:
+  values:
+    - name: Next
+states:
+  values:
+    - name: A
+      actions:
+        - action: Next
+          transitions:
+            - destination: B
+    - name: B
+      actions:
+        - action: Next
+          transitions:
+            - destination: C
+    - name: C
+      actions:
+        - action: Next
+          transitions:
+            - destination: A

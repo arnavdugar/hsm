@@ -1,0 +1,43 @@
+codegen:
+  golang:
+    package: queue
+    declare_actions: true
+    declare_states: true
+  mermaid:
+    enabled: true
+    filename: machine.md
+actions:
+  values:
+    - name: PushElement
+      data_type: QueueElement
+    - name: ConsumeElement
+    - name: Close
+states:
+  values:
+    - name: Empty 
+      symbol: StateQueueEmpty
+      actions:
+        - action: PushElement
+          transitions:
+            - transition: HandlePushElement
+              destination: HasElements
+        - action: Close
+          transitions:
+            - transition: HandleClose
+              destination: Closed
+    - name: HasElements
+      symbol: StateQueueHasElements
+      actions:
+        - action: PushElement
+          transitions:
+            - transition: HandlePushElement
+              destination: HasElements
+        - action: ConsumeElement
+          transitions:
+            - transition: HandleConsumeElement
+              destination: Empty
+              guard: HasSingleElement
+            - transition: HandleConsumeElement
+              destination: HasElements
+    - name: Closed
+      symbol: StateClosed
