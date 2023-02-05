@@ -1,0 +1,52 @@
+codegen:
+  golang:
+    package: garagedoor
+    declare_actions: true
+    declare_states: true
+  mermaid:
+    enabled: true
+    filename: machine.md
+actions:
+  values:
+    - name: Button
+    - name: Opened
+    - name: Closed
+    - name: Sensor
+states:
+  values:
+    - name: StoppedClosing
+      actions:
+        - action: Button
+          transitions:
+            - transition: HandleButtonWhenStoppedClosing
+              destination: Opening
+    - name: Opening
+      actions:
+        - action: Button
+          transitions:
+            - transition: HandleButtonWhenOpening
+              destination: StoppedOpening
+        - action: Opened
+          transitions:
+            - transition: HandleOpened
+              destination: StoppedOpening
+    - name: StoppedOpening
+      actions:
+        - action: Button
+          transitions:
+            - transition: HandleButtonWhenStoppedOpening
+              destination: Closing
+    - name: Closing
+      actions:
+        - action: Button
+          transitions:
+            - transition: HandleButtonWhenClosing
+              destination: StoppedClosing
+        - action: Sensor
+          transitions:
+            - transition: HandleSensor
+              destination: Opening
+        - action: Closed
+          transitions:
+            - transition: HandleClosed
+              destination: StoppedClosing

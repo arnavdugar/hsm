@@ -1,0 +1,14 @@
+codegen:
+  golang:
+    package: test
+actions:
+  type: ActionType
+  values:
+    - name: ActionName
+states:
+  values:
+    - name: StateName
+      actions:
+        - action: ActionName
+          transitions:
+            - destination: UnknownState
