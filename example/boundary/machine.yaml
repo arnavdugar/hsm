@@ -1,0 +1,37 @@
+codegen:
+  golang:
+    package: boundary
+    context: context.Context
+    declare_actions: true
+    declare_states: true
+    imports:
+      - path: "context"
+  mermaid:
+    enabled: true
+    filename: machine.md
+actions:
+  values:
+    - name: Next
+states:
+  values:
+    - name: A
+      actions:
+        - action: Next
+          transitions:
+            - destination: B
+      enter: OnEnterA
+      exit: OnExitA
+    - name: B
+      actions:
+        - action: Next
+          transitions:
+            - destination: C
+      enter: OnEnterB
+      exit: OnExitB
+    - name: C
+      actions:
+        - action: Next
+          transitions:
+            - destination: A
+      enter: OnEnterC
+      exit: OnExitC
