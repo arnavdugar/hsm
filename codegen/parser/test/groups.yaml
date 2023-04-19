@@ -1,0 +1,27 @@
+codegen:
+  golang:
+    package: test
+groups:
+  - name: GroupC
+    groups:
+      - GroupD
+      - GroupE
+  - name: GroupD
+    states:
+      - StateA
+  - name: GroupE
+    states:
+      - StateB
+  - name: GroupA
+    groups:
+      - GroupC
+    states:
+      - StateA
+  - name: GroupB
+    groups:
+      - GroupC
+      - GroupE
+states:
+  values:
+    - name: StateA
+    - name: StateB

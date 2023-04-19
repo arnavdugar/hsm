@@ -5,6 +5,8 @@ type Machine struct {
 	Codegen Codegen `yaml:"codegen"`
 	// Required. State machine actions.
 	Actions Actions `yaml:"actions"`
+	// Optional. A list of groups containing states or other groups.
+	Groups []Group `yaml:"groups"`
 	// Required. State machine states.
 	States States `yaml:"states"`
 }
@@ -64,6 +66,21 @@ type Action struct {
 	DataType string `yaml:"data_type"`
 }
 
+type Group struct {
+	// Required. The group name.
+	Name string `yaml:"name"`
+	// Optional. The name of the function called before the state is entered. If
+	// omitted, no function is created.
+	Enter string `yaml:"enter"`
+	// Optional. The name of the function called when the state is exited. If
+	// omitted, no function is created.
+	Exit string `yaml:"exit"`
+	// Optional. A list of group names of groups contained by this group.
+	Groups []string `yaml:"groups"`
+	// Optional. A list of state names of groups contained by this group.
+	States []string `yaml:"states"`
+}
+
 type States struct {
 	// Optional. The type of the state enum. If omitted, the type "StateType" is
 	// used.
@@ -75,7 +92,8 @@ type States struct {
 type State struct {
 	// Required. The state name.
 	Name string `yaml:"name"`
-	// Required. The state symbol.
+	// Optional. The state symbol. If omitted, the symbol "State" appended with
+	// the state name is used.
 	Symbol string `yaml:"symbol"`
 	// Optional. The name of the function called before the state is entered. If
 	// omitted, no function is created.
@@ -98,12 +116,13 @@ type TransitionAction struct {
 }
 
 type Transition struct {
-	// Optional. Name of the transition function.
-	Transition string `yaml:"transition"`
 	// Required. Name of the destination.
 	Destination string `yaml:"destination"`
-	// Optional. If the transition is external.
-	External bool `yaml:"external"`
 	// Optional. Name of the guard function.
 	Guard string `yaml:"guard"`
+	// Optional. Name of the transition function.
+	Transition string `yaml:"transition"`
+	// Optional. A list of groups that should be re-entered during the transition.
+	// The source and destination states must both be contained in the groups.
+	External []string `yaml:"external"`
 }

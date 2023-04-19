@@ -238,6 +238,10 @@ func (renderer *Renderer) createHandlerInterface() *ast.GenDecl {
 		}
 	}
 
+	for _, name := range renderer.BoundaryHandlers.Values {
+		methods = append(methods, createBoundaryMethodSignature(name, paramsList))
+	}
+
 	return &ast.GenDecl{
 		Tok: token.TYPE,
 		Specs: []ast.Spec{
@@ -620,31 +624,31 @@ func (renderer *Renderer) createHandleCases(action config.Action) []ast.Stmt {
 		handledStates[state.Name] = false
 	}
 
-	caseList, skippedStates := []ast.Stmt{}, []*config.State{}
-	for index := range renderer.States.Values {
-		state := &renderer.States.Values[index]
+	caseList, skippedStates := []ast.Stmt{}, []*parser.StateData{}
+	for _, state := range renderer.States.Values {
+		stateData := renderer.StatesMap[state.Name]
 
 		var transitionAction *config.TransitionAction
-		for index := range state.TransitionActions {
-			if state.TransitionActions[index].Action == action.Name {
-				transitionAction = &state.TransitionActions[index]
+		for index := range stateData.TransitionActions {
+			if stateData.TransitionActions[index].Action == action.Name {
+				transitionAction = &stateData.TransitionActions[index]
 				break
 			}
 		}
 
 		if transitionAction == nil {
-			skippedStates = append(skippedStates, state)
+			skippedStates = append(skippedStates, stateData)
 			continue
 		}
 
 		caseList = append(caseList, &ast.CaseClause{
 			List: []ast.Expr{
 				&ast.Ident{
-					Name: state.Symbol,
+					Name: stateData.Symbol,
 				},
 			},
 			Body: renderer.createHandleTransitions(
-				state, action, transitionAction.Transitions),
+				state.Name, action, transitionAction.Transitions),
 		})
 	}
 	if len(skippedStates) > 0 {
@@ -682,8 +686,7 @@ func (renderer *Renderer) createHandleCases(action config.Action) []ast.Stmt {
 }
 
 func (renderer *Renderer) createHandleTransitions(
-	exitState *config.State, action config.Action,
-	transitions []config.Transition,
+	stateName string, action config.Action, transitions []config.Transition,
 ) []ast.Stmt {
 	var exitCall *ast.BlockStmt
 	if exitState.Exit != "" {

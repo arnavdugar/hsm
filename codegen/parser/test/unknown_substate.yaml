@@ -1,0 +1,7 @@
+codegen:
+  golang:
+    package: test
+groups:
+  - name: GroupA
+    states:
+      - UnknownState

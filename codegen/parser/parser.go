@@ -1,25 +1,51 @@
 package parser
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	"sort"
 
 	"github.com/arnavdugar/hsm/codegen/config"
+	"github.com/arnavdugar/hsm/codegen/util/orderedset"
 	"gopkg.in/yaml.v3"
 )
 
 type Machine struct {
 	config.Machine
-	ActionsMap map[string]*ActionData
-	StatesMap  map[string]*config.State
+	ActionsMap       map[string]*ActionData
+	BoundaryHandlers orderedset.OrderedSet[string]
+	GroupsMap        map[string]*GroupData
+	StatesMap        map[string]*StateData
 }
 
 type ActionData struct {
 	Action         *config.Action
-	Guards         []string
-	guardsSet      map[string]struct{}
-	Transitions    []string
-	transitionsSet map[string]struct{}
+	Guards         orderedset.OrderedSet[string]
+	Transitions    orderedset.OrderedSet[string]
+	TransitionData map[string][]*TransitionData
+}
+
+type TransitionData struct {
+	EnterHandlers []string
+	ExitHandlers  []string
+	Guard         string
+	Transition    string
+}
+
+type GroupData struct {
+	*config.Group
+	ancestors  map[string]struct{}
+	Children   []*GroupData
+	Index      int
+	parents    []*GroupData
+	statesData []*StateData
+}
+
+type StateData struct {
+	*config.State
+	ancestors map[string]struct{}
+	Groups    []*GroupData
 }
 
 func Parse(reader io.Reader) (*Machine, error) {
@@ -27,8 +53,10 @@ func Parse(reader io.Reader) (*Machine, error) {
 	decoder.KnownFields(true)
 
 	machine := Machine{
-		ActionsMap: map[string]*ActionData{},
-		StatesMap:  map[string]*config.State{},
+		ActionsMap:       map[string]*ActionData{},
+		BoundaryHandlers: orderedset.Create[string](),
+		GroupsMap:        map[string]*GroupData{},
+		StatesMap:        map[string]*StateData{},
 	}
 
 	err := decoder.Decode(&machine.Machine)
@@ -43,20 +71,21 @@ func Parse(reader io.Reader) (*Machine, error) {
 
 	for index := range actions.Values {
 		action := &actions.Values[index]
+
 		_, ok := machine.ActionsMap[action.Name]
 		if ok {
 			return nil, fmt.Errorf("duplicate action name: %s", action.Name)
 		}
-		machine.ActionsMap[action.Name] = &ActionData{
-			Action:         action,
-			Guards:         []string{},
-			guardsSet:      map[string]struct{}{},
-			Transitions:    []string{},
-			transitionsSet: map[string]struct{}{},
-		}
 
 		if action.Symbol == "" {
 			action.Symbol = fmt.Sprintf("Action%s", action.Name)
+		}
+
+		machine.ActionsMap[action.Name] = &ActionData{
+			Action:         action,
+			Guards:         orderedset.Create[string](),
+			Transitions:    orderedset.Create[string](),
+			TransitionData: map[string]*TransitionData{},
 		}
 	}
 
@@ -71,16 +100,28 @@ func Parse(reader io.Reader) (*Machine, error) {
 		if ok {
 			return nil, fmt.Errorf("duplicate state name: %s", state.Name)
 		}
-		machine.StatesMap[state.Name] = state
 
 		if state.Symbol == "" {
 			state.Symbol = fmt.Sprintf("State%s", state.Name)
+		}
+
+		if state.Enter != "" {
+			machine.BoundaryHandlers.Add(state.Enter)
+		}
+		if state.Exit != "" {
+			machine.BoundaryHandlers.Add(state.Exit)
+		}
+
+		machine.StatesMap[state.Name] = &StateData{
+			State:     state,
+			ancestors: map[string]struct{}{},
+			Groups:    []*GroupData{},
 		}
 	}
 
 	for _, state := range machine.Machine.States.Values {
 		for _, action := range state.TransitionActions {
-			actionsMap, ok := machine.ActionsMap[action.Action]
+			actionData, ok := machine.ActionsMap[action.Action]
 			if !ok {
 				return nil, fmt.Errorf(
 					`unknown action "%s" in transitions for state "%s"`,
@@ -96,22 +137,130 @@ func Parse(reader io.Reader) (*Machine, error) {
 				}
 
 				if transition.Guard != "" {
-					_, ok := actionsMap.guardsSet[transition.Guard]
-					if !ok {
-						actionsMap.guardsSet[transition.Guard] = struct{}{}
-						actionsMap.Guards =
-							append(actionsMap.Guards, transition.Guard)
+					actionData.Guards.Add(transition.Guard)
+				}
+				if transition.Transition != "" {
+					actionData.Transitions.Add(transition.Transition)
+				}
+			}
+		}
+	}
+
+	for index := range machine.Groups {
+		group := &machine.Groups[index]
+
+		machine.GroupsMap[group.Name] = &GroupData{
+			Group:      group,
+			ancestors:  map[string]struct{}{},
+			Children:   []*GroupData{},
+			Index:      index,
+			parents:    []*GroupData{},
+			statesData: []*StateData{},
+		}
+	}
+
+	for _, groupData := range machine.GroupsMap {
+		for _, child := range groupData.Groups {
+			childData, ok := machine.GroupsMap[child]
+			if !ok {
+				return nil, fmt.Errorf(
+					`unknown subgroup "%s" in group "%s"`, child, groupData.Name)
+			}
+
+			groupData.Children = append(groupData.Children, childData)
+			childData.parents = append(childData.parents, groupData)
+		}
+
+		for _, state := range groupData.States {
+			stateData, ok := machine.StatesMap[state]
+			if !ok {
+				return nil, fmt.Errorf(
+					`unknown substate "%s" in group "%s"`, state, groupData.Name)
+			}
+			groupData.statesData = append(groupData.statesData, stateData)
+		}
+	}
+
+	pendingGroups := map[string]int{}
+	currentGroups := []*GroupData{}
+
+	for _, group := range machine.Groups {
+		groupData := machine.GroupsMap[group.Name]
+
+		if len(groupData.parents) == 0 {
+			currentGroups = append(currentGroups, groupData)
+		} else {
+			pendingGroups[group.Name] = len(groupData.parents)
+		}
+	}
+
+	for len(currentGroups) > 0 {
+		current := currentGroups[0]
+		currentGroups = currentGroups[1:]
+
+		for _, child := range current.Children {
+			child.ancestors[current.Name] = struct{}{}
+			for ancestor := range current.ancestors {
+				child.ancestors[ancestor] = struct{}{}
+			}
+
+			if pendingGroups[child.Name] == 1 {
+				delete(pendingGroups, child.Name)
+				currentGroups = append(currentGroups, child)
+			} else {
+				pendingGroups[child.Name] -= 1
+			}
+		}
+
+		for _, state := range current.statesData {
+			state.ancestors[current.Name] = struct{}{}
+			for ancestor := range current.ancestors {
+				state.ancestors[ancestor] = struct{}{}
+			}
+		}
+	}
+
+	if len(pendingGroups) > 0 {
+		return nil, errors.New("groups declaration contains a cycle")
+	}
+
+	for _, stateData := range machine.StatesMap {
+		for group := range stateData.ancestors {
+			stateData.Groups = append(stateData.Groups, machine.GroupsMap[group])
+		}
+		sort.Slice(stateData.Groups, func(i, j int) bool {
+			return stateData.Groups[i].Index < stateData.Groups[j].Index
+		})
+	}
+
+	for _, stateData := range machine.StatesMap {
+		for _, transitionAction := range stateData.TransitionActions {
+			actionData := machine.ActionsMap[transitionAction.Action]
+			transitionData := actionData.TransitionData[stateData.Name]
+			for _, transition := range transitionAction.Transitions {
+				exitGroups := stateData.Groups
+				enterGroups := machine.StatesMap[transition.Destination].Groups
+
+				exitIndex, enterIndex := 0, 0
+				for exitIndex < len(exitGroups) || enterIndex < len(enterGroups) {
+					exitGroupIndex := exitGroups[exitIndex].Index
+					enterGroupIndex := enterGroups[enterIndex].Index
+					switch {
+					case exitGroupIndex < enterGroupIndex:
+
+					case exitGroupIndex > enterGroupIndex:
+
+					default:
+						// TODO: Handle
 					}
 				}
 
-				if transition.Transition != "" {
-					_, ok := actionsMap.transitionsSet[transition.Transition]
-					if !ok {
-						actionsMap.transitionsSet[transition.Transition] = struct{}{}
-						actionsMap.Transitions =
-							append(actionsMap.Transitions, transition.Transition)
-					}
-				}
+				transitionData = append(transitionData, &TransitionData{
+					EnterHandlers: []string{},
+					ExitHandlers:  []string{},
+					Guard:         transition.Guard,
+					Transition:    transition.Transition,
+				})
 			}
 		}
 	}

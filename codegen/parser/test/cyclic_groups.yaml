@@ -1,0 +1,10 @@
+codegen:
+  golang:
+    package: test
+groups:
+  - name: GroupA
+    groups:
+      - GroupB
+  - name: GroupB
+    groups:
+      - GroupA
