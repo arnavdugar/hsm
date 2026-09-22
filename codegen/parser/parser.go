@@ -6,7 +6,7 @@ import (
 
 	"github.com/arnavdugar/hsm/codegen/config"
 	"github.com/arnavdugar/hsm/codegen/util/orderedset"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 type Machine struct {

@@ -7,6 +7,7 @@ import (
 
 	"github.com/arnavdugar/hsm/codegen/parser"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 //go:embed test/duplicate_action.yaml
@@ -17,7 +18,7 @@ func TestParseDuplicateAction(t *testing.T) {
 
 	_, err := parser.Parse(reader)
 
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Equal(t, "duplicate action name: ActionName", err.Error())
 }
 
@@ -29,7 +30,7 @@ func TestParseDuplicateState(t *testing.T) {
 
 	_, err := parser.Parse(reader)
 
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Equal(t, "duplicate state name: StateName", err.Error())
 }
 
@@ -41,7 +42,7 @@ func TestParseUnknownDestination(t *testing.T) {
 
 	_, err := parser.Parse(reader)
 
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Equal(t, `unknown destination state "UnknownState" in "ActionName" transition from state "StateName"`, err.Error())
 }
 
@@ -53,6 +54,6 @@ func TestParseUnknownTransitionAction(t *testing.T) {
 
 	_, err := parser.Parse(reader)
 
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Equal(t, `unknown action "UnknownActionName" in transitions for state "StateName"`, err.Error())
 }
