@@ -5,6 +5,8 @@ type Machine struct {
 	Codegen Codegen `yaml:"codegen"`
 	// Required. State machine actions.
 	Actions Actions `yaml:"actions"`
+	// Optional. State machine groups.
+	Groups Groups `yaml:"groups"`
 	// Required. State machine states.
 	States States `yaml:"states"`
 }
@@ -64,6 +66,37 @@ type Action struct {
 	DataType string `yaml:"data_type"`
 }
 
+type Groups struct {
+	// Required. A list of all of the groups. Containing groups must appear before
+	// their subgroups. Entry hooks run in this order, exit hooks in reverse order,
+	// and action rules are considered in reverse order after state rules.
+	Values []Group `yaml:"values"`
+}
+
+type Group struct {
+	// Required. The group name. State and group names share a namespace.
+	Name string `yaml:"name"`
+	// Optional unless the group is a destination or another group's initial
+	// target. The name of a member state or subgroup, directly or transitively.
+	// Group targets are resolved recursively to their initial state.
+	Initial string `yaml:"initial"`
+	// Optional. The name of the function called when the group is entered. If
+	// omitted, no function is created.
+	Enter string `yaml:"enter"`
+	// Optional. The name of the function called when the group is exited. If
+	// omitted, no function is created.
+	Exit string `yaml:"exit"`
+	// Optional. Direct subgroups. Their transitive member states are also members
+	// of this group. Containment must be acyclic; membership may overlap.
+	Groups []string `yaml:"groups"`
+	// Optional. Direct member states.
+	States []string `yaml:"states"`
+	// Optional. Action rules available to every member state. These are considered
+	// after state rules, in reverse group declaration order, until a guard passes
+	// or an unguarded transition is reached. Guard errors abort the transition.
+	TransitionActions []TransitionAction `yaml:"actions"`
+}
+
 type States struct {
 	// Optional. The type of the state enum. If omitted, the type "StateType" is
 	// used.
@@ -73,7 +106,7 @@ type States struct {
 }
 
 type State struct {
-	// Required. The state name.
+	// Required. The state name. State and group names share a namespace.
 	Name string `yaml:"name"`
 	// Optional. The state symbol. If omitted, the symbol "State" appended with
 	// the state name is used.
@@ -84,7 +117,7 @@ type State struct {
 	// Optional. The name of the function called when the state is exited. If
 	// omitted, no function is created.
 	Exit string `yaml:"exit"`
-	// Required. A list of actions that will cause transitions from the state, and
+	// Optional. A list of actions that will cause transitions from the state, and
 	// the corresponding transitions.
 	TransitionActions []TransitionAction `yaml:"actions"`
 }
@@ -92,19 +125,22 @@ type State struct {
 type TransitionAction struct {
 	// Required. The name of the action that triggers the transition.
 	Action string `yaml:"action"`
-	// Required. The transitions from the state. If multiple transitions are
-	// specified for a given action, the transitions should have guard functions
-	// specified to select the appropriate destination.
+	// Required. Transitions in evaluation order. The first passing guard or
+	// unguarded transition wins. If every guard is false, evaluation continues
+	// with the next applicable group's rules. A guard error aborts evaluation.
 	Transitions []Transition `yaml:"transitions"`
 }
 
 type Transition struct {
 	// Optional. Name of the transition function.
 	Transition string `yaml:"transition"`
-	// Required. Name of the destination.
+	// Required. Name of the destination state or group. A group destination
+	// resolves through its initial values to a concrete state.
 	Destination string `yaml:"destination"`
-	// Optional. If the transition is external.
-	External bool `yaml:"external"`
+	// Optional. Groups whose boundaries are crossed even when both endpoints are
+	// members. Includes their declared subgroups transitively, but not groups
+	// that merely overlap. Each group is exited/entered at most once.
+	External []string `yaml:"external"`
 	// Optional. Name of the guard function.
 	Guard string `yaml:"guard"`
 }

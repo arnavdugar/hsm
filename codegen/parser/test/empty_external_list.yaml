@@ -1,0 +1,18 @@
+actions:
+  values:
+    - name: Move
+groups:
+  values:
+    - name: G
+      states:
+        - A
+        - B
+states:
+  values:
+    - name: A
+      actions:
+        - action: Move
+          transitions:
+            - destination: B
+              external: []
+    - name: B

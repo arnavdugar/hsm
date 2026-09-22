@@ -1,0 +1,12 @@
+actions:
+  values:
+    - name: Go
+states:
+  values:
+    - name: A
+      actions:
+        - action: Go
+          transitions:
+            - destination: A
+              external:
+                - A

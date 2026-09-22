@@ -1,0 +1,20 @@
+actions:
+  values:
+    - name: Move
+groups:
+  values:
+    - name: G
+      states:
+        - A
+      actions:
+        - action: Move
+          transitions:
+            - destination: A
+states:
+  values:
+    - name: A
+      actions:
+        - action: Move
+          transitions:
+            - destination: B
+    - name: B

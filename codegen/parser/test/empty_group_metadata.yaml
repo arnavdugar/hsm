@@ -1,0 +1,15 @@
+actions:
+  values:
+    - name: Go
+groups:
+  values:
+    - name: G
+      actions:
+        - action: Go
+          transitions:
+            - destination: A
+              guard: CanMove
+              transition: OnMove
+states:
+  values:
+    - name: A

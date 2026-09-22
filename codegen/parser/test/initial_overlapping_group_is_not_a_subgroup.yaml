@@ -1,0 +1,13 @@
+groups:
+  values:
+    - name: G
+      states:
+        - A
+      initial: H
+    - name: H
+      states:
+        - A
+      initial: A
+states:
+  values:
+    - name: A

@@ -1,0 +1,13 @@
+actions:
+  values:
+    - name: Go
+states:
+  values:
+    - name: A
+      actions:
+        - action: Go
+          transitions:
+            - destination: A
+            - destination: A
+              guard: CanMove
+              transition: OnMove

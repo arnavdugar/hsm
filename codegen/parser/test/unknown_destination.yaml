@@ -1,8 +1,4 @@
-codegen:
-  golang:
-    package: test
 actions:
-  type: ActionType
   values:
     - name: ActionName
 states:

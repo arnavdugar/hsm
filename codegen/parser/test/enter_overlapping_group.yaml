@@ -1,0 +1,23 @@
+actions:
+  values:
+    - name: Move
+groups:
+  values:
+    - name: G
+      states:
+        - A
+        - B
+    - name: Overlap
+      states:
+        - B
+        - C
+      initial: C
+states:
+  values:
+    - name: A
+      actions:
+        - action: Move
+          transitions:
+            - destination: B
+    - name: B
+    - name: C

@@ -1,0 +1,15 @@
+groups:
+  values:
+    - name: Left
+      states:
+        - A
+        - B
+    - name: Right
+      states:
+        - B
+        - C
+states:
+  values:
+    - name: A
+    - name: B
+    - name: C

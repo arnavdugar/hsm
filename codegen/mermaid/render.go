@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/arnavdugar/hsm/codegen/parser"
+	"github.com/arnavdugar/hsm/codegen/util/orderedset"
 )
 
 type Renderer parser.Machine
@@ -32,19 +33,27 @@ go run github.com/arnavdugar/hsm/codegen`)
 ` + "```mermaid\nstateDiagram-v2\n")
 
 	for _, state := range renderer.States.Values {
+		// Preserve state-declared action order, then add inherited actions.
+		var actions orderedset.OrderedSet[string]
 		for _, action := range state.TransitionActions {
-			for _, transition := range action.Transitions {
+			actions.Add(action.Action)
+		}
+		for _, action := range renderer.Actions.Values {
+			actions.Add(action.Name)
+		}
+		for _, action := range actions.Values() {
+			for _, transition := range renderer.StatesMap[state.Name].Transitions[action] {
 				buffer.WriteString("  ")
 				buffer.WriteString(state.Name)
 				buffer.WriteString(" --> ")
-				buffer.WriteString(renderer.StatesMap[transition.Destination].Name)
+				buffer.WriteString(transition.Destination.Name)
 				buffer.WriteString(": ")
 				if transition.Guard != "" {
 					buffer.WriteString("[")
 					buffer.WriteString(transition.Guard)
 					buffer.WriteString("] ")
 				}
-				buffer.WriteString(action.Action)
+				buffer.WriteString(action)
 				buffer.WriteString("\n")
 			}
 		}

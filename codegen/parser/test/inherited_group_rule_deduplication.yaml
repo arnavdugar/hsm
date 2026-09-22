@@ -1,0 +1,26 @@
+actions:
+  values:
+    - name: Move
+groups:
+  values:
+    - name: Outer
+      groups:
+        - Left
+        - Right
+      actions:
+        - action: Move
+          transitions:
+            - destination: A
+              guard: CanMove
+    - name: Left
+      groups:
+        - Leaf
+    - name: Right
+      groups:
+        - Leaf
+    - name: Leaf
+      states:
+        - A
+states:
+  values:
+    - name: A

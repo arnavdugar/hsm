@@ -1,0 +1,24 @@
+actions:
+  values:
+    - name: Reset
+groups:
+  values:
+    - name: G
+      states:
+        - A
+        - B
+    - name: Overlap
+      states:
+        - B
+        - C
+states:
+  values:
+    - name: A
+    - name: B
+      actions:
+        - action: Reset
+          transitions:
+            - destination: B
+              external:
+                - Overlap
+    - name: C

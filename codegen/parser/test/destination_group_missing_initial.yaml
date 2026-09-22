@@ -1,0 +1,13 @@
+actions:
+  values:
+    - name: Go
+groups:
+  values:
+    - name: G
+states:
+  values:
+    - name: A
+      actions:
+        - action: Go
+          transitions:
+            - destination: G

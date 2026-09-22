@@ -1,0 +1,27 @@
+actions:
+  values:
+    - name: Enter
+groups:
+  values:
+    - name: Outer
+      groups:
+        - Left
+        - Right
+      initial: A
+    - name: Left
+      groups:
+        - Leaf
+    - name: Right
+      groups:
+        - Leaf
+    - name: Leaf
+      states:
+        - A
+states:
+  values:
+    - name: Outside
+      actions:
+        - action: Enter
+          transitions:
+            - destination: Outer
+    - name: A

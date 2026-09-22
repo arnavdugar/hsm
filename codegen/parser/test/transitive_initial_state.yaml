@@ -1,0 +1,12 @@
+groups:
+  values:
+    - name: Outer
+      groups:
+        - Inner
+      initial: B
+    - name: Inner
+      states:
+        - B
+states:
+  values:
+    - name: B

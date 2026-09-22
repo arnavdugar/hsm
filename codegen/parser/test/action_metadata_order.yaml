@@ -1,0 +1,37 @@
+actions:
+  values:
+    - name: Go
+groups:
+  values:
+    - name: Z
+      states: [B]
+      actions:
+        - action: Go
+          transitions:
+            - destination: B
+              guard: GroupZGuard
+              transition: GroupZHandler
+    - name: Y
+      states: [A]
+      actions:
+        - action: Go
+          transitions:
+            - destination: A
+              guard: GroupYGuard
+              transition: GroupYHandler
+states:
+  values:
+    - name: B
+      actions:
+        - action: Go
+          transitions:
+            - destination: B
+              guard: StateBGuard
+              transition: StateBHandler
+    - name: A
+      actions:
+        - action: Go
+          transitions:
+            - destination: A
+              guard: StateAGuard
+              transition: StateAHandler

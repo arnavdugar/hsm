@@ -1,0 +1,9 @@
+groups:
+  values:
+    - name: G
+      states:
+        - A
+states:
+  values:
+    - name: A
+    - name: Outside

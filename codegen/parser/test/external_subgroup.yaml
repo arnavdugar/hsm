@@ -1,0 +1,27 @@
+actions:
+  values:
+    - name: Reset
+groups:
+  values:
+    - name: Outer
+      groups:
+        - Left
+        - Right
+    - name: Left
+      groups:
+        - Leaf
+    - name: Right
+      groups:
+        - Leaf
+    - name: Leaf
+      states:
+        - A
+states:
+  values:
+    - name: A
+      actions:
+        - action: Reset
+          transitions:
+            - destination: A
+              external:
+                - Left

@@ -1,0 +1,20 @@
+groups:
+  values:
+    - name: Outer
+      groups:
+        - Left
+        - Right
+      states:
+        - A
+    - name: Left
+      groups:
+        - Leaf
+    - name: Right
+      groups:
+        - Leaf
+    - name: Leaf
+      states:
+        - A
+states:
+  values:
+    - name: A

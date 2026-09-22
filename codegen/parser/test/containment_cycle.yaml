@@ -1,0 +1,8 @@
+groups:
+  values:
+    - name: G
+      groups:
+        - H
+    - name: H
+      groups:
+        - G

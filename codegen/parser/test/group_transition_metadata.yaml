@@ -1,0 +1,16 @@
+actions:
+  values:
+    - name: Move
+groups:
+  values:
+    - name: G
+      states:
+        - A
+      actions:
+        - action: Move
+          transitions:
+            - destination: A
+              transition: OnMove
+states:
+  values:
+    - name: A

@@ -1,0 +1,129 @@
+codegen:
+  golang:
+    package: group
+    context: context.Context
+    declare_actions: true
+    declare_states: true
+    imports:
+      - path: context
+  mermaid:
+    enabled: true
+    filename: machine.md
+actions:
+  values:
+    - name: Start
+    - name: Direct
+    - name: Next
+    - name: Retry
+      data_type: int
+    - name: Restart
+    - name: Reset
+    - name: Refresh
+    - name: Close
+groups:
+  values:
+    - name: Session
+      groups:
+        - Connecting  
+      states:
+        - Ready
+        - Draining
+      initial: Connecting
+      enter: EnterSession
+      exit: ExitSession
+      actions:
+        - action: Retry
+          transitions:
+            - destination: Session
+              transition: RetrySession
+        - action: Restart
+          transitions:
+            - destination: Session
+        - action: Reset
+          transitions:
+            - destination: Session
+              external: [Session]
+              transition: ResetSession
+        - action: Close
+          transitions:
+            - destination: Offline
+    - name: Connecting
+      states:
+        - Dialing
+        - Authenticating
+      initial: Dialing
+      enter: EnterConnecting
+      exit: ExitConnecting
+      actions:
+        - action: Retry
+          transitions:
+            - destination: Dialing
+              guard: CanRetryConnecting
+              transition: RetryConnecting
+    - name: Transport
+      states:
+        - Authenticating
+        - Ready
+        - Draining
+      enter: EnterTransport
+      exit: ExitTransport
+      actions:
+        - action: Refresh
+          transitions:
+            - destination: Ready
+              guard: CanRefresh
+        - action: Retry
+          transitions:
+            - destination: Ready
+              guard: CanRetryTransport
+              transition: RetryTransport
+states:
+  values:
+    - name: Offline
+      enter: EnterOffline
+      exit: ExitOffline
+      actions:
+        - action: Start
+          transitions:
+            - destination: Session
+        - action: Direct
+          transitions:
+            - destination: Authenticating
+    - name: Dialing
+      enter: EnterDialing
+      exit: ExitDialing
+      actions:
+        - action: Next
+          transitions:
+            - destination: Authenticating
+    - name: Authenticating
+      enter: EnterAuthenticating
+      exit: ExitAuthenticating
+      actions:
+        - action: Next
+          transitions:
+            - destination: Ready
+        - action: Retry
+          transitions:
+            - destination: Authenticating
+              guard: CanRetryState
+              transition: RetryState
+    - name: Ready
+      enter: EnterReady
+      exit: ExitReady
+      actions:
+        - action: Next
+          transitions:
+            - destination: Draining
+        - action: Refresh
+          transitions:
+            - destination: Ready
+              external:
+                - Session
+    - name: Draining
+      enter: EnterDraining
+      exit: ExitDraining
+      actions:
+        - action: Next
+          transitions:
+            - destination: Offline

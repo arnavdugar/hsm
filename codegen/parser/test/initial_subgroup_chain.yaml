@@ -1,0 +1,17 @@
+groups:
+  values:
+    - name: Outer
+      groups:
+        - Middle
+      initial: Middle
+    - name: Middle
+      groups:
+        - Leaf
+      initial: Leaf
+    - name: Leaf
+      states:
+        - A
+      initial: A
+states:
+  values:
+    - name: A

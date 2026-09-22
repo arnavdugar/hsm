@@ -1,0 +1,7 @@
+groups:
+  values:
+    - name: G
+      initial: B
+states:
+  values:
+    - name: B

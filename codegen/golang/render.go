@@ -231,15 +231,20 @@ func (renderer *Renderer) createHandlerInterface() *ast.GenDecl {
 		}
 	}
 
+	boundaries := map[string]bool{}
+	addBoundary := func(name string) {
+		if name != "" && !boundaries[name] {
+			methods = append(methods, createBoundaryMethodSignature(name, paramsList))
+			boundaries[name] = true
+		}
+	}
 	for _, state := range renderer.States.Values {
-		if state.Enter != "" {
-			methods = append(methods,
-				createBoundaryMethodSignature(state.Enter, paramsList))
-		}
-		if state.Exit != "" {
-			methods = append(methods,
-				createBoundaryMethodSignature(state.Exit, paramsList))
-		}
+		addBoundary(state.Enter)
+		addBoundary(state.Exit)
+	}
+	for _, group := range renderer.Groups.Values {
+		addBoundary(group.Enter)
+		addBoundary(group.Exit)
 	}
 
 	return &ast.GenDecl{
@@ -615,15 +620,8 @@ func (renderer *Renderer) createHandleCases(action config.Action) []ast.Stmt {
 	for index := range renderer.States.Values {
 		state := &renderer.States.Values[index]
 
-		var transitionAction *config.TransitionAction
-		for index := range state.TransitionActions {
-			if state.TransitionActions[index].Action == action.Name {
-				transitionAction = &state.TransitionActions[index]
-				break
-			}
-		}
-
-		if transitionAction == nil {
+		transitions := renderer.StatesMap[state.Name].Transitions[action.Name]
+		if len(transitions) == 0 {
 			skippedStates = append(skippedStates, state)
 			continue
 		}
@@ -635,7 +633,7 @@ func (renderer *Renderer) createHandleCases(action config.Action) []ast.Stmt {
 				},
 			},
 			Body: renderer.createHandleTransitions(
-				state, action, transitionAction.Transitions),
+				state, action, transitions),
 		})
 	}
 	if len(skippedStates) > 0 {
@@ -681,7 +679,7 @@ func (renderer *Renderer) createHandleCases(action config.Action) []ast.Stmt {
 
 func (renderer *Renderer) createHandleTransitions(
 	exitState *config.State, action config.Action,
-	transitions []config.Transition,
+	transitions []parser.TransitionData,
 ) []ast.Stmt {
 	var exitCall *ast.BlockStmt
 	if exitState.Exit != "" {
@@ -695,6 +693,11 @@ func (renderer *Renderer) createHandleTransitions(
 		if exitCall != nil {
 			transitionCall = append(transitionCall, exitCall)
 		}
+		for _, group := range transition.ExitGroups {
+			if group.Exit != "" {
+				transitionCall = append(transitionCall, renderer.createBoundaryHandler(group.Exit))
+			}
+		}
 
 		if transition.Transition != "" {
 			transitionCall = append(
@@ -702,7 +705,12 @@ func (renderer *Renderer) createHandleTransitions(
 					action, transition.Transition))
 		}
 
-		destination := renderer.StatesMap[transition.Destination]
+		for _, group := range transition.EnterGroups {
+			if group.Enter != "" {
+				transitionCall = append(transitionCall, renderer.createBoundaryHandler(group.Enter))
+			}
+		}
+		destination := transition.Destination
 		if destination.Enter != "" {
 			transitionCall = append(
 				transitionCall, renderer.createBoundaryHandler(destination.Enter))
@@ -711,7 +719,7 @@ func (renderer *Renderer) createHandleTransitions(
 		transitionCall = append(transitionCall, &ast.ReturnStmt{
 			Results: []ast.Expr{
 				&ast.Ident{
-					Name: renderer.StatesMap[transition.Destination].Symbol,
+					Name: destination.Symbol,
 				},
 				&ast.Ident{
 					Name: "nil",
@@ -810,7 +818,7 @@ func (renderer *Renderer) createBoundaryHandler(
 							X:   ast.NewIdent("handler"),
 							Sel: ast.NewIdent(name),
 						},
-						Args: renderer.createBounHandlerArgs(),
+						Args: renderer.createBoundaryHandlerArgs(),
 					},
 				},
 			}, &ast.IfStmt{
@@ -892,7 +900,7 @@ func (renderer *Renderer) createTransitionHandler(
 	}
 }
 
-func (renderer *Renderer) createBounHandlerArgs() []ast.Expr {
+func (renderer *Renderer) createBoundaryHandlerArgs() []ast.Expr {
 	args := []ast.Expr{}
 
 	if renderer.Codegen.Golang.Context != "" {
