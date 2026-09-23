@@ -1,0 +1,62 @@
+codegen:
+  golang:
+    package: connectionmanager
+    declare_actions: true
+    declare_states: true
+  mermaid:
+    enabled: true
+    filename: machine.md
+actions:
+  values:
+    - name: Connect
+    - name: TransportReady
+    - name: Failure
+    - name: Authenticated
+    - name: ConnectionLost
+    - name: Disconnect
+    - name: Timeout
+states:
+  values:
+    - name: Disconnected
+      actions:
+        - action: Connect
+          transitions:
+            - destination: Connecting
+              transition: StartSession
+    - name: Connecting
+      actions:
+        - action: TransportReady
+          transitions:
+            - destination: Authenticating
+        - action: Failure
+          transitions:
+            - destination: Backoff
+    - name: Authenticating
+      actions:
+        - action: Authenticated
+          transitions:
+            - destination: Connected
+              transition: ResetRetries
+        - action: Failure
+          transitions:
+            - destination: Backoff
+    - name: Connected
+      actions:
+        - action: ConnectionLost
+          transitions:
+            - destination: Backoff
+        - action: Disconnect
+          transitions:
+            - destination: Disconnected
+    - name: Backoff
+      actions:
+        - action: Timeout
+          transitions:
+            - destination: Connecting
+              guard: CanRetry
+              transition: RecordRetry
+            - destination: Failed
+        - action: Disconnect
+          transitions:
+            - destination: Disconnected
+    - name: Failed

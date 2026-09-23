@@ -1,0 +1,104 @@
+codegen:
+  golang:
+    package: tcp
+    declare_actions: true
+    declare_states: true
+  mermaid:
+    enabled: true
+    filename: machine.md
+actions:
+  values:
+    - name: ActiveOpen
+    - name: PassiveOpen
+    - name: ReceiveSyn
+    - name: Send
+    - name: Close
+    - name: ReceiveSynAck
+    - name: ReceiveAck
+    - name: ReceiveFin
+    - name: ReceiveFinAck
+    - name: Timeout
+states:
+  values:
+    - name: Closed
+      actions:
+        - action: ActiveOpen
+          transitions:
+            - destination: SynSent
+        - action: PassiveOpen
+          transitions:
+            - destination: Listen
+    - name: Listen
+      actions:
+        - action: ReceiveSyn
+          transitions:
+            - destination: SynReceived
+        - action: Send
+          transitions:
+            - destination: SynSent
+        - action: Close
+          transitions:
+            - destination: Closed
+    - name: SynSent
+      actions:
+        - action: ReceiveSynAck
+          transitions:
+            - destination: Established
+        - action: ReceiveSyn
+          transitions:
+            - destination: SynReceived
+        - action: Close
+          transitions:
+            - destination: Closed
+    - name: SynReceived
+      actions:
+        - action: ReceiveAck
+          transitions:
+            - destination: Established
+        - action: Close
+          transitions:
+            - destination: FinWait1
+    - name: Established
+      actions:
+        - action: Close
+          transitions:
+            - destination: FinWait1
+        - action: ReceiveFin
+          transitions:
+            - destination: CloseWait
+    - name: FinWait1
+      actions:
+        - action: ReceiveAck
+          transitions:
+            - destination: FinWait2
+        - action: ReceiveFin
+          transitions:
+            - destination: Closing
+        - action: ReceiveFinAck
+          transitions:
+            - destination: TimeWait
+    - name: FinWait2
+      actions:
+        - action: ReceiveFin
+          transitions:
+            - destination: TimeWait
+    - name: CloseWait
+      actions:
+        - action: Close
+          transitions:
+            - destination: LastAck
+    - name: Closing
+      actions:
+        - action: ReceiveAck
+          transitions:
+            - destination: TimeWait
+    - name: LastAck
+      actions:
+        - action: ReceiveAck
+          transitions:
+            - destination: Closed
+    - name: TimeWait
+      actions:
+        - action: Timeout
+          transitions:
+            - destination: Closed

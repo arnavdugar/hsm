@@ -15,41 +15,60 @@ handled. This implementation uses a yaml configuration file to statically render
 handler methods that perform the state machine logic.
 
 ## Status
+
 This project is still under active development and is subject to breaking
 changes without warning.
 
 ## Usage
 
 ### Configuration
+
 The state machine structure and code generation features are configured using a
 yaml file, with structure defined in
 [codegen/config/config.go](codegen/config/config.go).
 
 ### Code generation
+
 The logic for the state machine can be generated using the command
+
 ```
 go run github.com/arnavdugar/hsm/codegen -i=${INPUT_FILE} -o=${OUTPUT_FILE}
 ```
+
 where `INPUT_FILE` is the configuration file and `OUTPUT_FILE` is the generated
 golang file. An additional file containing a mermaid.js diagram of the state
 machine can be generated if specified in the configuration file.
 
 ### Examples
+
 Several examples of state machine configurations and their rendered logic are
-provided under the [`examples`](examples) directory:
-  - [boundary](example/boundary): A simple, three-state state machine that
-    demonstrates the use of boundary (enter and exit) handlers.
-  - [garagedoor](example/garagedoor): A state machine that simulates the
-    functionality of a garage door.
-  - [queue](example/queue): A state machine that encapsulates a queue object
-    that can be closed only when the queue is empty, demonstrating the use of
-    guard functions.
-  - [simple](example/simple) A simple, three-state state machine containing a
-    single action that cycles between the three states.
+provided under the [`example`](example) directory:
+
+- [boundary](example/boundary): A simple, three-state state machine that
+  demonstrates the use of boundary (enter and exit) handlers.
+- [garagedoor](example/garagedoor): A state machine that simulates the
+  functionality of a garage door.
+- [queue](example/queue): A state machine that encapsulates a queue object
+  that can be closed only when the queue is empty, demonstrating the use of
+  guard functions.
+- [simple](example/simple) A simple, three-state state machine containing a
+  single action that cycles between the three states.
+- [orderfulfillment](example/orderfulfillment): Shipping and pickup branches
+  reconverge at completion, with a separate cancellation terminal state.
+- [atm](example/atm): A menu hub with balance, withdrawal, and deposit spokes.
+- [combinationlock](example/combinationlock): A prefix chain with guards that
+  advance or reset based on digit action data.
+- [connectionmanager](example/connectionmanager): Shared recovery loops with
+  a guarded retry budget and explicit timeout actions.
+- [rollback](example/rollback): A forward job workflow with compensation paths
+  determined by how far the job progressed.
+- [tcp](example/tcp): A simplified TCP lifecycle with asymmetric opening and
+  closing paths, including simultaneous open and close.
 
 ## Features
 
 ### Action hooks
+
 The state machine configuration allows optionally specifying several three types
 of hooks when handling an action, which are called in the following order:
 
@@ -67,11 +86,13 @@ may return a non-nil error, which is propagated to the initial call to handle
 the action, signaling that the transition should be aborted.
 
 ### Guard functions
+
 Each transition can be preceeded by a guard function that determines whether or
 not the transition should be taken given any context or action data, if
-spedified. 
+spedified.
 
 ### Visualization
+
 The renderer provides the option to output a
 [mermaid.js](https://mermaid.js.org/) diagram in a markdown file. If checked
 into GitHub, these diagrams will automatically be rendered.

@@ -1,0 +1,41 @@
+codegen:
+  golang:
+    package: combinationlock
+    declare_actions: true
+    declare_states: true
+  mermaid:
+    enabled: true
+    filename: machine.md
+actions:
+  values:
+    - name: Digit
+      data_type: int
+    - name: Lock
+states:
+  values:
+    - name: Locked
+      actions:
+        - action: Digit
+          transitions:
+            - destination: FirstDigit
+              guard: IsFirstDigit
+            - destination: Locked
+    - name: FirstDigit
+      actions:
+        - action: Digit
+          transitions:
+            - destination: SecondDigit
+              guard: IsSecondDigit
+            - destination: Locked
+    - name: SecondDigit
+      actions:
+        - action: Digit
+          transitions:
+            - destination: Unlocked
+              guard: IsThirdDigit
+            - destination: Locked
+    - name: Unlocked
+      actions:
+        - action: Lock
+          transitions:
+            - destination: Locked

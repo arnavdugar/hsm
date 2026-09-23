@@ -1,0 +1,52 @@
+codegen:
+  golang:
+    package: orderfulfillment
+    declare_actions: true
+    declare_states: true
+  mermaid:
+    enabled: true
+    filename: machine.md
+actions:
+  values:
+    - name: Ship
+    - name: PickUp
+    - name: Cancel
+    - name: Dispatch
+    - name: Deliver
+    - name: Collect
+states:
+  values:
+    - name: Paid
+      actions:
+        - action: Ship
+          transitions:
+            - destination: Packing
+        - action: PickUp
+          transitions:
+            - destination: ReadyForPickup
+        - action: Cancel
+          transitions:
+            - destination: Cancelled
+    - name: Packing
+      actions:
+        - action: Dispatch
+          transitions:
+            - destination: Shipped
+        - action: Cancel
+          transitions:
+            - destination: Cancelled
+    - name: Shipped
+      actions:
+        - action: Deliver
+          transitions:
+            - destination: Completed
+    - name: ReadyForPickup
+      actions:
+        - action: Collect
+          transitions:
+            - destination: Completed
+        - action: Cancel
+          transitions:
+            - destination: Cancelled
+    - name: Completed
+    - name: Cancelled

@@ -1,0 +1,54 @@
+codegen:
+  golang:
+    package: rollback
+    declare_actions: true
+    declare_states: true
+  mermaid:
+    enabled: true
+    filename: machine.md
+actions:
+  values:
+    - name: Reserved
+    - name: Failure
+    - name: Charged
+    - name: Fulfilled
+    - name: Refunded
+    - name: Released
+states:
+  values:
+    - name: Reserve
+      actions:
+        - action: Reserved
+          transitions:
+            - destination: Charge
+        - action: Failure
+          transitions:
+            - destination: Failed
+    - name: Charge
+      actions:
+        - action: Charged
+          transitions:
+            - destination: Fulfill
+        - action: Failure
+          transitions:
+            - destination: ReleaseReservation
+    - name: Fulfill
+      actions:
+        - action: Fulfilled
+          transitions:
+            - destination: Completed
+        - action: Failure
+          transitions:
+            - destination: Refund
+    - name: Refund
+      actions:
+        - action: Refunded
+          transitions:
+            - destination: ReleaseReservation
+    - name: ReleaseReservation
+      actions:
+        - action: Released
+          transitions:
+            - destination: Failed
+    - name: Completed
+    - name: Failed

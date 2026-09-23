@@ -1,0 +1,70 @@
+codegen:
+  golang:
+    package: atm
+    declare_actions: true
+    declare_states: true
+  mermaid:
+    enabled: true
+    filename: machine.md
+actions:
+  values:
+    - name: CheckBalance
+    - name: Withdraw
+    - name: Deposit
+    - name: Exit
+    - name: Done
+    - name: Submit
+    - name: Cancel
+    - name: Approve
+    - name: Decline
+states:
+  values:
+    - name: Menu
+      actions:
+        - action: CheckBalance
+          transitions:
+            - destination: Balance
+        - action: Withdraw
+          transitions:
+            - destination: EnterAmount
+        - action: Deposit
+          transitions:
+            - destination: AcceptDeposit
+        - action: Exit
+          transitions:
+            - destination: Ended
+    - name: Balance
+      actions:
+        - action: Done
+          transitions:
+            - destination: Menu
+    - name: EnterAmount
+      actions:
+        - action: Submit
+          transitions:
+            - destination: AuthorizeWithdrawal
+        - action: Cancel
+          transitions:
+            - destination: Menu
+    - name: AuthorizeWithdrawal
+      actions:
+        - action: Approve
+          transitions:
+            - destination: DispenseCash
+        - action: Decline
+          transitions:
+            - destination: Menu
+    - name: DispenseCash
+      actions:
+        - action: Done
+          transitions:
+            - destination: Menu
+    - name: AcceptDeposit
+      actions:
+        - action: Done
+          transitions:
+            - destination: Menu
+        - action: Cancel
+          transitions:
+            - destination: Menu
+    - name: Ended
