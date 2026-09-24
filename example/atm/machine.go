@@ -37,7 +37,7 @@ type Handler interface {
 }
 
 // Handles an action and returns the destination state or an error.
-func Handle(handler Handler, state StateType, action ActionType, data interface{}) (StateType, error) {
+func Handle(handler Handler, state StateType, action ActionType, data any) (StateType, error) {
 	switch action {
 	case ActionCheckBalance:
 		return HandleCheckBalance(handler, state)

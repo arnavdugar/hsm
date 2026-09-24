@@ -388,7 +388,7 @@ func (renderer *Renderer) createHandleParams() []*ast.Field {
 			Name: "data",
 		}},
 		Type: &ast.Ident{
-			Name: "interface{}",
+			Name: "any",
 		},
 	})
 
