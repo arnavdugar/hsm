@@ -14,10 +14,9 @@ state machine at runtime, and evaluate the state machine as each action is
 handled. This implementation uses a yaml configuration file to statically render
 handler methods that perform the state machine logic.
 
-## Status
+## License
 
-This project is still under active development and is subject to breaking
-changes without warning.
+This project is licensed under the [MIT License](LICENSE).
 
 ## Usage
 
