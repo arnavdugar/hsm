@@ -16,8 +16,11 @@ handler methods that perform the state machine logic.
 
 ## Status
 
-This project is still under active development and is subject to breaking
-changes without warning.
+Current version: **1.0.0**.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
 
 ## Usage
 
