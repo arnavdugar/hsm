@@ -455,11 +455,21 @@ func createHandleActionCase(
 				},
 			},
 		}, &ast.IfStmt{
-			Cond: &ast.UnaryExpr{
-				Op: token.NOT,
-				X: &ast.Ident{
-					Name: "ok",
-				},
+			Cond: &ast.BinaryExpr{
+				X:  &ast.UnaryExpr{Op: token.NOT, X: ast.NewIdent("ok")},
+				Op: token.LAND,
+				Y: &ast.ParenExpr{X: &ast.BinaryExpr{
+					X:  &ast.BinaryExpr{X: ast.NewIdent("data"), Op: token.NEQ, Y: ast.NewIdent("nil")},
+					Op: token.LOR,
+					Y: &ast.BinaryExpr{
+						X: &ast.CallExpr{
+							Fun:  ast.NewIdent("any"),
+							Args: []ast.Expr{ast.NewIdent("actionData")},
+						},
+						Op: token.NEQ,
+						Y:  ast.NewIdent("nil"),
+					},
+				}},
 			},
 			Body: &ast.BlockStmt{
 				List: []ast.Stmt{

@@ -34,7 +34,7 @@ func Handle(handler Handler, state StateType, action ActionType, data any) (Stat
 	switch action {
 	case ActionDigit:
 		actionData, ok := data.(int)
-		if !ok {
+		if !ok && (data != nil || any(actionData) != nil) {
 			return state, runtime.ErrInvalidActionDataType
 		}
 		return HandleDigit(handler, state, actionData)

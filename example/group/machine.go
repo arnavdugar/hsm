@@ -72,7 +72,7 @@ func Handle(ctx context.Context, handler Handler, state StateType, action Action
 		return HandleNext(ctx, handler, state)
 	case ActionRetry:
 		actionData, ok := data.(int)
-		if !ok {
+		if !ok && (data != nil || any(actionData) != nil) {
 			return state, runtime.ErrInvalidActionDataType
 		}
 		return HandleRetry(ctx, handler, state, actionData)

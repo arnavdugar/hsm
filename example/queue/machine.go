@@ -35,7 +35,7 @@ func Handle(handler Handler, state StateType, action ActionType, data any) (Stat
 	switch action {
 	case ActionPushElement:
 		actionData, ok := data.(QueueElement)
-		if !ok {
+		if !ok && (data != nil || any(actionData) != nil) {
 			return state, runtime.ErrInvalidActionDataType
 		}
 		return HandlePushElement(handler, state, actionData)
