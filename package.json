@@ -1,0 +1,8 @@
+{
+  "name": "@arnavdugar/hsm",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./runtime": "./runtime/machine.ts"
+  }
+}
