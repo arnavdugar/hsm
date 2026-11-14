@@ -12,6 +12,7 @@ import (
 	"github.com/arnavdugar/hsm/codegen/golang"
 	"github.com/arnavdugar/hsm/codegen/mermaid"
 	"github.com/arnavdugar/hsm/codegen/parser"
+	"github.com/arnavdugar/hsm/codegen/typescript"
 )
 
 type output struct {
@@ -27,7 +28,7 @@ func (items *outputs) add(spec string) error {
 		return errors.New("expected target=path")
 	}
 	switch target {
-	case "go", "mermaid":
+	case "go", "typescript", "mermaid":
 	default:
 		return fmt.Errorf("unknown output target %q", target)
 	}
@@ -53,7 +54,7 @@ func run(args []string) error {
 	flags := flag.NewFlagSet("hsm", flag.ContinueOnError)
 	input := flags.String("i", "", "Input YAML file, or - for standard input.")
 	var targets outputs
-	flags.Func("o", "Output target and path (go=path, mermaid=path). Repeat to emit multiple targets. Use - for standard output.", targets.add)
+	flags.Func("o", "Output target and path (go=path, typescript=path, mermaid=path). Repeat to emit multiple targets. Use - for standard output.", targets.add)
 	if err := flags.Parse(args); err != nil {
 		return err
 	}
@@ -88,6 +89,8 @@ func run(args []string) error {
 		switch item.target {
 		case "go":
 			rendered[i], err = golang.Create(machine).Render()
+		case "typescript":
+			rendered[i], err = typescript.Create(machine).Render()
 		case "mermaid":
 			rendered[i], err = mermaid.Create(machine).Render()
 		}

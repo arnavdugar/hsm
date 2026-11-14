@@ -1,9 +1,9 @@
 codegen:
+  context:
+    golang: context.Context
+    typescript: unknown
   golang:
     package: boundary
-    context: context.Context
-    declare_actions: true
-    declare_states: true
     imports:
       - path: "context"
 actions:

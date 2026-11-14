@@ -1,0 +1,22 @@
+package printer
+
+import (
+	"github.com/microsoft/TypeScript/tsc/internal/ast"
+	"github.com/microsoft/TypeScript/tsc/internal/core"
+	"github.com/microsoft/TypeScript/tsc/internal/tspath"
+)
+
+// NOTE: EmitHost operations must be thread-safe
+type EmitHost interface {
+	Options() *core.CompilerOptions
+	SourceFiles() []*ast.SourceFile
+	ContentMapperExtensionRewrites() []tspath.ExtensionRewrite
+	ContentMapperExtensionForFileName(fileName tspath.RootedFilePath) string
+	CaseSensitivity() tspath.CaseSensitivity
+	CommonSourceDirectory() tspath.RootedDirectoryPath
+	IsEmitBlocked(file tspath.RootedFilePath) bool
+	WriteFile(fileName tspath.RootedFilePath, text string) error
+	GetEmitModuleFormatOfFile(file ast.HasFileName) core.ModuleKind
+	NewEmitResolver(emitContext *EmitContext) EmitResolver
+	IsSourceFileFromExternalLibrary(file *ast.SourceFile) bool
+}

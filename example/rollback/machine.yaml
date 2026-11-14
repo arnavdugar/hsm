@@ -1,8 +1,6 @@
 codegen:
   golang:
     package: rollback
-    declare_actions: true
-    declare_states: true
 actions:
   values:
     - name: Reserved

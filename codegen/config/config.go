@@ -12,28 +12,48 @@ type Machine struct {
 }
 
 type Codegen struct {
-	// Required. Golang code generation features.
+	// Optional. Handler context types by target language.
+	Context TargetType `yaml:"context"`
+	// Go code generation features.
 	Golang Golang `yaml:"golang"`
+	// Optional. TypeScript code generation features.
+	TypeScript TypeScript `yaml:"typescript"`
 }
 
 type Golang struct {
 	// Required. The golang package name for the generated file.
 	Package string `yaml:"package"`
+	// Optional. Use external action type and constants.
+	OmitActionDeclarations bool `yaml:"omit_action_declarations"`
+	// Optional. Use external state type and constants.
+	OmitStateDeclarations bool `yaml:"omit_state_declarations"`
 	// Optional. Additional imports.
-	Imports []Import `yaml:"imports"`
-	// Optional. The type for a context parameter in all of the handler methods.
-	Context string `yaml:"context"`
-	// Optional. Create a struct declaring the action types.
-	DeclareActions bool `yaml:"declare_actions"`
-	// Optional. Create a struct declaring the state types.
-	DeclareStates bool `yaml:"declare_states"`
+	Imports []GolangImport `yaml:"imports"`
 }
 
-type Import struct {
+type GolangImport struct {
 	// Optional. The import name.
 	Name string `yaml:"name"`
 	// Required. The import path.
 	Path string `yaml:"path"`
+}
+
+type TypeScript struct {
+	// Optional. Use external action type and constants.
+	OmitActionDeclarations bool `yaml:"omit_action_declarations"`
+	// Optional. Use external state type and constants.
+	OmitStateDeclarations bool `yaml:"omit_state_declarations"`
+	// Optional. Named imports from TypeScript modules.
+	Imports []TypeScriptImport `yaml:"imports"`
+}
+
+type TypeScriptImport struct {
+	// Required. The module specifier.
+	Path string `yaml:"path"`
+	// Optional. Names to import as types only.
+	Types []string `yaml:"types"`
+	// Optional. Names to import as runtime values.
+	Values []string `yaml:"values"`
 }
 
 type Actions struct {
@@ -51,9 +71,13 @@ type Action struct {
 	// Optional. The action symbol. If omitted, the symbol "Action" appended with
 	// the action name is used.
 	Symbol string `yaml:"symbol"`
-	// Optional. The action data type. If omitted, no action data parameter is
-	// created.
-	DataType string `yaml:"data_type"`
+	// Optional. Payload types by target language.
+	DataType TargetType `yaml:"data_type"`
+}
+
+type TargetType struct {
+	Golang     string `yaml:"golang"`
+	TypeScript string `yaml:"typescript"`
 }
 
 type Groups struct {

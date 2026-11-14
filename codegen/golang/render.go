@@ -55,14 +55,14 @@ func (renderer *Renderer) createDeclarations() []ast.Decl {
 		createImports(renderer.Codegen.Golang.Imports),
 	}
 
-	if renderer.Codegen.Golang.DeclareActions {
+	if !renderer.Codegen.Golang.OmitActionDeclarations {
 		declarations = append(
 			declarations,
 			createEnumDeclaration(renderer.Actions.Type, "int"),
 			createActionTypeEnumDeclaration(renderer.Actions))
 	}
 
-	if renderer.Codegen.Golang.DeclareStates {
+	if !renderer.Codegen.Golang.OmitStateDeclarations {
 		declarations = append(
 			declarations,
 			createEnumDeclaration(renderer.States.Type, "int"),
@@ -84,11 +84,11 @@ func (renderer *Renderer) createDeclarations() []ast.Decl {
 	return declarations
 }
 
-func createImports(imports []config.Import) *ast.GenDecl {
-	imports = append([]config.Import{{
+func createImports(imports []config.GolangImport) *ast.GenDecl {
+	imports = append([]config.GolangImport{{
 		Path: "github.com/arnavdugar/hsm/runtime",
 	}}, imports...)
-	slices.SortFunc(imports, func(a, b config.Import) int {
+	slices.SortFunc(imports, func(a, b config.GolangImport) int {
 		if a.Path == b.Path {
 			return strings.Compare(a.Name, b.Name)
 		}
@@ -106,7 +106,7 @@ func createImports(imports []config.Import) *ast.GenDecl {
 	}
 }
 
-func createImport(importEntry config.Import) *ast.ImportSpec {
+func createImport(importEntry config.GolangImport) *ast.ImportSpec {
 	var importName *ast.Ident
 	if importEntry.Name != "" {
 		importName = &ast.Ident{
@@ -195,13 +195,13 @@ func (renderer *Renderer) createHandlerInterface() *ast.GenDecl {
 	methods := []*ast.Field{}
 
 	paramsList := []*ast.Field{}
-	if renderer.Codegen.Golang.Context != "" {
+	if renderer.Codegen.Context.Golang != "" {
 		paramsList = append(paramsList, &ast.Field{
 			Names: []*ast.Ident{{
 				Name: "ctx",
 			}},
 			Type: &ast.Ident{
-				Name: renderer.Codegen.Golang.Context,
+				Name: renderer.Codegen.Context.Golang,
 			},
 		})
 	}
@@ -210,13 +210,13 @@ func (renderer *Renderer) createHandlerInterface() *ast.GenDecl {
 		actionData := renderer.ActionsMap[action.Name]
 
 		actionParamsList := paramsList
-		if actionData.Action.DataType != "" {
+		if actionData.Action.DataType.Golang != "" {
 			actionParamsList = append(actionParamsList, &ast.Field{
 				Names: []*ast.Ident{{
 					Name: "data",
 				}},
 				Type: &ast.Ident{
-					Name: actionData.Action.DataType,
+					Name: actionData.Action.DataType.Golang,
 				},
 			})
 		}
@@ -356,13 +356,13 @@ func (renderer *Renderer) createHandleFunction() *ast.FuncDecl {
 func (renderer *Renderer) createHandleParams() []*ast.Field {
 	params := []*ast.Field{}
 
-	if renderer.Codegen.Golang.Context != "" {
+	if renderer.Codegen.Context.Golang != "" {
 		params = append(params, &ast.Field{
 			Names: []*ast.Ident{{
 				Name: "ctx",
 			}},
 			Type: &ast.Ident{
-				Name: renderer.Codegen.Golang.Context,
+				Name: renderer.Codegen.Context.Golang,
 			},
 		})
 	}
@@ -406,7 +406,7 @@ func (renderer *Renderer) createHandleActionCases() []ast.Stmt {
 	for _, action := range renderer.Actions.Values {
 		caseClauses = append(
 			caseClauses, createHandleActionCase(
-				action, renderer.Codegen.Golang.Context))
+				action, renderer.Codegen.Context.Golang))
 	}
 
 	caseClauses = append(caseClauses, &ast.CaseClause{
@@ -433,7 +433,7 @@ func createHandleActionCase(
 ) *ast.CaseClause {
 	body := []ast.Stmt{}
 
-	if action.DataType != "" {
+	if action.DataType.Golang != "" {
 		body = append(body, &ast.AssignStmt{
 			Lhs: []ast.Expr{
 				&ast.Ident{
@@ -450,7 +450,7 @@ func createHandleActionCase(
 						Name: "data",
 					},
 					Type: &ast.Ident{
-						Name: action.DataType,
+						Name: action.DataType.Golang,
 					},
 				},
 			},
@@ -527,7 +527,7 @@ func createHandleActionArgs(
 		Name: "state",
 	})
 
-	if action.DataType != "" {
+	if action.DataType.Golang != "" {
 		args = append(args, &ast.Ident{
 			Name: "actionData",
 		})
@@ -584,13 +584,13 @@ func (renderer *Renderer) createHandleActionParams(
 ) []*ast.Field {
 	paramsList := []*ast.Field{}
 
-	if renderer.Codegen.Golang.Context != "" {
+	if renderer.Codegen.Context.Golang != "" {
 		paramsList = append(paramsList, &ast.Field{
 			Names: []*ast.Ident{{
 				Name: "ctx",
 			}},
 			Type: &ast.Ident{
-				Name: renderer.Codegen.Golang.Context,
+				Name: renderer.Codegen.Context.Golang,
 			},
 		})
 	}
@@ -611,13 +611,13 @@ func (renderer *Renderer) createHandleActionParams(
 		},
 	})
 
-	if action.DataType != "" {
+	if action.DataType.Golang != "" {
 		paramsList = append(paramsList, &ast.Field{
 			Names: []*ast.Ident{{
 				Name: "data",
 			}},
 			Type: &ast.Ident{
-				Name: action.DataType,
+				Name: action.DataType.Golang,
 			},
 		})
 	}
@@ -913,7 +913,7 @@ func (renderer *Renderer) createTransitionHandler(
 func (renderer *Renderer) createBoundaryHandlerArgs() []ast.Expr {
 	args := []ast.Expr{}
 
-	if renderer.Codegen.Golang.Context != "" {
+	if renderer.Codegen.Context.Golang != "" {
 		args = append(args, &ast.Ident{
 			Name: "ctx",
 		})
@@ -927,13 +927,13 @@ func (renderer *Renderer) createActionHandlerArgs(
 ) []ast.Expr {
 	args := []ast.Expr{}
 
-	if renderer.Codegen.Golang.Context != "" {
+	if renderer.Codegen.Context.Golang != "" {
 		args = append(args, &ast.Ident{
 			Name: "ctx",
 		})
 	}
 
-	if action.DataType != "" {
+	if action.DataType.Golang != "" {
 		args = append(args, &ast.Ident{
 			Name: "data",
 		})

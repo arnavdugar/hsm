@@ -1,9 +1,9 @@
 codegen:
+  context:
+    golang: context.Context
+    typescript: '{ requestId: string }'
   golang:
     package: group
-    context: context.Context
-    declare_actions: true
-    declare_states: true
     imports:
       - path: context
 actions:
@@ -12,7 +12,9 @@ actions:
     - name: Direct
     - name: Next
     - name: Retry
-      data_type: int
+      data_type:
+        golang: int
+        typescript: number
     - name: Restart
     - name: Reset
     - name: Refresh

@@ -31,8 +31,9 @@ yaml file, with structure defined in
 The logic for the state machine can be generated using the command:
 
 ```sh
-go run ./codegen -i="${INPUT_FILE}" \
+go run ./codegen -i=machine.yaml \
   -o go=machine.go \
+  -o typescript=machine.ts \
   -o mermaid=machine.md
 ```
 

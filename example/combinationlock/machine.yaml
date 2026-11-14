@@ -1,12 +1,12 @@
 codegen:
   golang:
     package: combinationlock
-    declare_actions: true
-    declare_states: true
 actions:
   values:
     - name: Digit
-      data_type: int
+      data_type:
+        golang: int
+        typescript: number
     - name: Lock
 states:
   values:

@@ -1,8 +1,6 @@
 codegen:
   golang:
     package: garagedoor
-    declare_actions: true
-    declare_states: true
 actions:
   values:
     - name: Button

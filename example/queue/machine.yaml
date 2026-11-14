@@ -1,12 +1,12 @@
 codegen:
   golang:
     package: queue
-    declare_actions: true
-    declare_states: true
 actions:
   values:
     - name: PushElement
-      data_type: QueueElement
+      data_type:
+        golang: QueueElement
+        typescript: 'Record<string, never>'
     - name: ConsumeElement
     - name: Close
 states:
