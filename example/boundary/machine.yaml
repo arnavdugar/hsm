@@ -6,9 +6,6 @@ codegen:
     declare_states: true
     imports:
       - path: "context"
-  mermaid:
-    enabled: true
-    filename: machine.md
 actions:
   values:
     - name: Next

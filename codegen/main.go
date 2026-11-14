@@ -3,90 +3,107 @@ package main
 import (
 	"errors"
 	"flag"
+	"fmt"
 	"log"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/arnavdugar/hsm/codegen/golang"
 	"github.com/arnavdugar/hsm/codegen/mermaid"
 	"github.com/arnavdugar/hsm/codegen/parser"
 )
 
-var inFileName = flag.String("i", "", "Input file.")
-var outFileName = flag.String("o", "", "Output file.")
+type output struct {
+	target string
+	path   string
+}
+
+type outputs []output
+
+func (items *outputs) add(spec string) error {
+	target, path, ok := strings.Cut(spec, "=")
+	if !ok || path == "" {
+		return errors.New("expected target=path")
+	}
+	switch target {
+	case "go", "mermaid":
+	default:
+		return fmt.Errorf("unknown output target %q", target)
+	}
+	for _, item := range *items {
+		if item.target == target {
+			return fmt.Errorf("output target %q is specified more than once", target)
+		}
+		if filepath.Clean(item.path) == filepath.Clean(path) {
+			return fmt.Errorf("output path %q is specified more than once", path)
+		}
+	}
+	*items = append(*items, output{target: target, path: path})
+	return nil
+}
 
 func main() {
-	err := run()
-	if err != nil {
+	if err := run(os.Args[1:]); err != nil && !errors.Is(err, flag.ErrHelp) {
 		log.Fatal(err)
 	}
 }
 
-func run() error {
-	flag.Parse()
-
-	if inFileName == nil || *inFileName == "" {
+func run(args []string) error {
+	flags := flag.NewFlagSet("hsm", flag.ContinueOnError)
+	input := flags.String("i", "", "Input YAML file, or - for standard input.")
+	var targets outputs
+	flags.Func("o", "Output target and path (go=path, mermaid=path). Repeat to emit multiple targets. Use - for standard output.", targets.add)
+	if err := flags.Parse(args); err != nil {
+		return err
+	}
+	if flags.NArg() != 0 {
+		return fmt.Errorf("unexpected argument %q", flags.Arg(0))
+	}
+	if *input == "" {
 		return errors.New("input file is required")
 	}
 
-	if outFileName == nil || *outFileName == "" {
-		return errors.New("output file is required")
+	if len(targets) == 0 {
+		return errors.New("specify at least one output with -o target=path")
 	}
 
-	var inFile *os.File
-	if *inFileName == "-" {
-		inFile = os.Stdin
-	} else {
-		var err error
-		inFile, err = os.Open(*inFileName)
+	inFile := os.Stdin
+	if *input != "-" {
+		file, err := os.Open(*input)
 		if err != nil {
 			return err
 		}
+		defer file.Close()
+		inFile = file
 	}
-
 	machine, err := parser.Parse(inFile)
 	if err != nil {
 		return err
 	}
 
-	golangGenerator := golang.Create(machine)
-	output, err := golangGenerator.Render()
-	if err != nil {
-		return err
-	}
-
-	var outFile *os.File
-	if *outFileName == "-" {
-		outFile = os.Stdout
-	} else {
-		var err error
-		outFile, err = os.Create(*outFileName)
+	// Render every target before opening any output file.
+	rendered := make([][]byte, len(targets))
+	for i, item := range targets {
+		switch item.target {
+		case "go":
+			rendered[i], err = golang.Create(machine).Render()
+		case "mermaid":
+			rendered[i], err = mermaid.Create(machine).Render()
+		}
 		if err != nil {
-			return err
+			return fmt.Errorf("render %s: %w", item.target, err)
 		}
 	}
-
-	_, err = outFile.Write(output)
-	if err != nil {
-		return err
-	}
-
-	if machine.Machine.Codegen.Mermaid.Enabled {
-		mermaidGenerator := mermaid.Create(machine)
-		output, err = mermaidGenerator.Render()
-		if err != nil {
-			return err
+	for i, item := range targets {
+		if item.path == "-" {
+			_, err = os.Stdout.Write(rendered[i])
+		} else {
+			err = os.WriteFile(item.path, rendered[i], 0666)
 		}
-
-		outFile, err = os.Create(machine.Machine.Codegen.Mermaid.Filename)
 		if err != nil {
-			return err
-		}
-
-		_, err = outFile.Write(output)
-		if err != nil {
-			return err
+			return fmt.Errorf("write %s: %w", item.target, err)
 		}
 	}
-
 	return nil
 }

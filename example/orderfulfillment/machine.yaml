@@ -3,9 +3,6 @@ codegen:
     package: orderfulfillment
     declare_actions: true
     declare_states: true
-  mermaid:
-    enabled: true
-    filename: machine.md
 actions:
   values:
     - name: Ship

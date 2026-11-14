@@ -28,15 +28,15 @@ yaml file, with structure defined in
 
 ### Code generation
 
-The logic for the state machine can be generated using the command
+The logic for the state machine can be generated using the command:
 
-```
-go run github.com/arnavdugar/hsm/codegen -i=${INPUT_FILE} -o=${OUTPUT_FILE}
+```sh
+go run ./codegen -i="${INPUT_FILE}" \
+  -o go=machine.go \
+  -o mermaid=machine.md
 ```
 
-where `INPUT_FILE` is the configuration file and `OUTPUT_FILE` is the generated
-golang file. An additional file containing a mermaid.js diagram of the state
-machine can be generated if specified in the configuration file.
+where `${INPUT_FILE}` is the configuration file.
 
 ### Examples
 

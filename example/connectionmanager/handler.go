@@ -1,6 +1,6 @@
 package connectionmanager
 
-//go:generate go run github.com/arnavdugar/hsm/codegen -i=machine.yaml -o=machine.go
+//go:generate go run github.com/arnavdugar/hsm/codegen -i=machine.yaml -o go=machine.go -o mermaid=machine.md
 //go:generate go tool mockgen -source=machine.go -destination=machine_mock_test.go -package connectionmanager
 
 // RetryHandler counts retries after the initial attempt. A successful connection

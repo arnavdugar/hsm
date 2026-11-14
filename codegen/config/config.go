@@ -14,8 +14,6 @@ type Machine struct {
 type Codegen struct {
 	// Required. Golang code generation features.
 	Golang Golang `yaml:"golang"`
-	// Optional. Mermaid code generation features.
-	Mermaid Mermaid `yaml:"mermaid"`
 }
 
 type Golang struct {
@@ -36,14 +34,6 @@ type Import struct {
 	Name string `yaml:"name"`
 	// Required. The import path.
 	Path string `yaml:"path"`
-}
-
-type Mermaid struct {
-	// Optional. A flag to enable generating a mermaid diagram. All other fields
-	// are ignored if this is set to false.
-	Enabled bool `yaml:"enabled"`
-	// Required. The name of the output markdown file.
-	Filename string `yaml:"filename"`
 }
 
 type Actions struct {
