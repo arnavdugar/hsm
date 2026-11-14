@@ -11,17 +11,14 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        go: ['1.26.x', '1.27.x']
     steps:
       - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
       - uses: actions/setup-go@v7.0.0
         with:
-          go-version: ${{ matrix.go }}
+          go-version: '1.27.x'
+          check-latest: true
       - name: Check formatting
         run: test -z "$(gofmt -l codegen runtime example)"
       - name: Check generated files
@@ -47,5 +44,6 @@ jobs:
       - uses: actions/setup-go@v7.0.0
         with:
           go-version: '1.27.x'
+          check-latest: true
       - name: Check vulnerabilities
         run: go tool govulncheck ./...
