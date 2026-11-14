@@ -24,6 +24,15 @@ jobs:
           go-version: ${{ matrix.go }}
       - name: Check formatting
         run: test -z "$(gofmt -l codegen runtime example)"
+      - name: Check generated files
+        run: |
+          go generate ./...
+          changes=$(git status --porcelain --untracked-files=all)
+          if [ -n "$changes" ]; then
+            printf '%s\n' "$changes"
+            echo '::error::Generated files are out of date. Run go generate ./... and commit the changes.'
+            exit 1
+          fi
       - name: Test with race detector
         run: go test -race -count=1 ./...
       - name: Vet
