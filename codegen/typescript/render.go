@@ -259,24 +259,11 @@ func (r *renderer) createHandlerInterface(methods []handlerMethod) *ast.Node {
 }
 
 func (r *renderer) createResultType(stateType string) *ast.Node {
-	state := r.NewPropertySignatureDeclaration(
-		nil, r.NewIdentifier("state"), nil, r.typeReference(stateType), nil)
-	success := r.NewTypeLiteralNode(r.NewNodeList([]*ast.Node{
-		r.NewPropertySignatureDeclaration(
-			nil, r.NewIdentifier("ok"), nil, r.NewLiteralTypeNode(r.NewToken(ast.KindTrueKeyword)), nil,
-		),
-		state,
-	}))
-	failure := r.NewTypeLiteralNode(r.NewNodeList([]*ast.Node{
-		r.NewPropertySignatureDeclaration(
-			nil, r.NewIdentifier("ok"), nil, r.NewLiteralTypeNode(r.NewToken(ast.KindFalseKeyword)), nil,
-		),
-		state,
-		r.NewPropertySignatureDeclaration(
-			nil, r.NewIdentifier("error"), nil, r.NewKeywordTypeNode(ast.KindUnknownKeyword), nil),
-	}))
 	return r.NewTypeAliasDeclaration(
-		r.exported, r.NewIdentifier("HandleResult"), nil, r.union([]*ast.Node{success, failure}),
+		r.exported, r.NewIdentifier("HandleResult"), nil, r.NewTypeReferenceNode(
+			r.NewQualifiedName(r.NewIdentifier("runtime"), r.NewIdentifier("HandleResult")),
+			r.NewNodeList([]*ast.Node{r.typeReference(stateType)}),
+		),
 	)
 }
 

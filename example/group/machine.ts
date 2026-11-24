@@ -119,14 +119,7 @@ export interface Handler {
     }) => void | Error;
 }
 
-export type HandleResult = {
-    ok: true;
-    state: StateType;
-} | {
-    ok: false;
-    state: StateType;
-    error: unknown;
-};
+export type HandleResult = runtime.HandleResult<StateType>;
 
 export function handle(context: {
     requestId: string;

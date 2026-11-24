@@ -20,14 +20,7 @@ export type Action = {
 export interface Handler {
 }
 
-export type HandleResult = {
-    ok: true;
-    state: StateType;
-} | {
-    ok: false;
-    state: StateType;
-    error: unknown;
-};
+export type HandleResult = runtime.HandleResult<StateType>;
 
 export function handle(handler: Handler, state: StateType, action: Action): HandleResult {
     switch (action?.type) {
